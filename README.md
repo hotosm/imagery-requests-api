@@ -16,7 +16,7 @@ $ npm install
 ```
 npm run nodemon
 ```
-This will start the app at `http://localhost:3000`.
+This will start the app at `http://localhost:4000`.
 This command starts the server with `nodemon` which watches files and restarts when there's a change.
 
 ```
