@@ -2,11 +2,17 @@
 'use strict';
 
 var assert = require('chai').assert;
-var Server = require('../app/services/server');
-var connection = {port: 2000, host: '0.0.0.0'};
+import config from '../app/config';
+
+import Server from '../app/services/server';
+
+var options = {
+  connection: {port: 2000, host: '0.0.0.0'},
+  db: config.mongo.test_uri
+};
 
 describe('Testing endpoints', function () {
-  var instance = Server(connection).hapi;
+  var instance = Server(options).hapi;
 
   before(function (done) {
     done();

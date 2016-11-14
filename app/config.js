@@ -21,6 +21,7 @@ try {
 config.debug = process.env.DEBUG || config.debug;
 config.connection.port = process.env.PORT || config.connection.port;
 config.connection.host = process.env.HOST || config.connection.host;
+config.mongo.uri = process.env.MONGO_URI || config.mongo.uri;
 
 config.baseDir = __dirname;
 

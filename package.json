@@ -24,7 +24,8 @@
     "good-squeeze": "^5.0.0",
     "hapi": "^15.2.0",
     "hapi-router": "^3.5.0",
-    "lodash": "^4.17.0"
+    "lodash": "^4.17.0",
+    "mongoose": "^4.6.7"
   },
   "devDependencies": {
     "chai": "^3.5.0",
