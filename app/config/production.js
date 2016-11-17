@@ -8,5 +8,10 @@ module.exports = {
   mongo: {
     uri: null,
     test_uri: null
+  },
+
+  auth0: {
+    secret: null,
+    clientId: null
   }
 };

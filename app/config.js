@@ -22,6 +22,8 @@ config.debug = process.env.DEBUG || config.debug;
 config.connection.port = process.env.PORT || config.connection.port;
 config.connection.host = process.env.HOST || config.connection.host;
 config.mongo.uri = process.env.MONGO_URI || config.mongo.uri;
+config.auth0.secret = process.env.AUTH0_SECRET || config.auth0.secret;
+config.auth0.clientId = process.env.AUTH0_CLIENT_ID || config.auth0.clientId;
 
 config.baseDir = __dirname;
 
