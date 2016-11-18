@@ -1,16 +1,16 @@
 import mongoose from 'mongoose';
 
 const taskUpdateSchema = mongoose.Schema({
-  authorId: mongoose.Schema.Types.ObjectId,
+  authorId: String,
   status: String,
   comment: String,
   created: Date
 });
 
 const taskSchema = mongoose.Schema({
-  authorId: mongoose.Schema.Types.ObjectId,
+  authorId: String,
   requestId: mongoose.Schema.Types.ObjectId,
-  assigneeId: mongoose.Schema.Types.ObjectId,
+  assigneeId: String,
 
   name: String,
   geometry: [],

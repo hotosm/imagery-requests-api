@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const requestSchema = mongoose.Schema({
-  authorId: mongoose.Schema.Types.ObjectId,
+  authorId: String,
   name: String,
   status: String,
 

@@ -51,6 +51,17 @@ module.exports = function (hapiServer, cb) {
         options: {
           routes: 'app/routes/*.js'
         }
+      },
+
+      // Pagination
+      {
+        register: require('hapi-paginate'),
+        options: {
+          limit: 100,
+          routes: [
+            '/requests'
+          ]
+        }
       }
       // Plugin registration done.
     ], (err) => cb(err));
