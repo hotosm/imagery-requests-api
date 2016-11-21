@@ -5,6 +5,7 @@
   "repository": "https://github.com/hotosm/imagery-requests-api",
   "main": "",
   "scripts": {
+    "setupdb": "bash .build_files/setup-db.sh",
     "lint": "eslint app/ --ext .js",
     "test": "npm run test-script",
     "test-script": "NODE_ENV='test' ava test",
