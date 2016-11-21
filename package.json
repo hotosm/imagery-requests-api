@@ -8,7 +8,7 @@
     "setupdb": "bash .build_files/setup-db.sh",
     "lint": "eslint app/ --ext .js",
     "test": "npm run test-script",
-    "test-script": "NODE_ENV='test' ava test",
+    "test-script": "NODE_ENV='test' ava -c 1 test",
     "start": "node index.js",
     "nodemon": "nodemon index.js",
     "postinstall": "[ -f app/config/local.js ] || echo 'module.exports = {};' > app/config/local.js"
