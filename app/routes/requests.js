@@ -63,6 +63,13 @@ module.exports = [
       validate: {
         payload: {
           name: Joi.string().required(),
+          status: Joi.string(),
+          requestingOrg: Joi.string(),
+          gsd: Joi.number(),
+          productType: Joi.string(),
+          purpose: Joi.string(),
+          use: Joi.string(),
+          notes: Joi.string(),
           timePeriodRequestedFrom: Joi.alternatives().try(Joi.valid(''), Joi.date()),
           timePeriodRequestedTo: Joi.alternatives().try(Joi.valid(''), Joi.date().min(Joi.ref('timePeriodRequestedFrom')))
         }
