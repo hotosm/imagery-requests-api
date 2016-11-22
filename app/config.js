@@ -26,6 +26,10 @@ config.mongo.testUri = process.env.MONGO_TESTURI || config.mongo.testUri;
 config.auth0.secret = process.env.AUTH0_SECRET || config.auth0.secret;
 config.auth0.clientId = process.env.AUTH0_CLIENT_ID || config.auth0.clientId;
 
+if (!config.auth0.secret || !config.auth0.clientId) {
+  throw new Error('Missing auth0 credentials');
+}
+
 config.baseDir = __dirname;
 
 module.exports = config;
