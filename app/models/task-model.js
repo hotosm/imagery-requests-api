@@ -51,6 +51,6 @@ taskSchema.methods.addUpdate = function (authorId, status, comment) {
 };
 
 // Create model from schema.
-const taskModel = mongoose.model('request', taskSchema);
+const taskModel = mongoose.model('task', taskSchema);
 
 module.exports = taskModel;
