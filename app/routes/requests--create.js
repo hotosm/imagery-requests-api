@@ -20,8 +20,8 @@ module.exports = [
           purpose: Joi.string(),
           use: Joi.string(),
           notes: Joi.string(),
-          timePeriodRequestedFrom: Joi.alternatives().try(Joi.valid(''), Joi.date()),
-          timePeriodRequestedTo: Joi.alternatives().try(Joi.valid(''), Joi.date().min(Joi.ref('timePeriodRequestedFrom')))
+          timePeriodRequestedFrom: Joi.alternatives().try(Joi.valid(null), Joi.date()),
+          timePeriodRequestedTo: Joi.alternatives().try(Joi.valid(null), Joi.date().min(Joi.ref('timePeriodRequestedFrom')))
         }
       }
     },

@@ -29,7 +29,17 @@ test.cb.before(t => {
         _id: rid(1),
         authorId: 'coordinator',
         name: 'test request 1',
-        status: 'open'
+        status: 'open',
+        requestingOrg: 'the org',
+        gsd: 0.30,
+        productType: 'uav',
+        purpose: 'the purpose',
+        use: 'the imagery use',
+        notes: 'no notes',
+        timePeriodRequested: {
+          from: '2016-11-01T00:00:00.000Z',
+          to: '2016-11-21T00:00:00.000Z'
+        }
       }),
       createRequest({
         _id: rid(2),
@@ -230,4 +240,144 @@ test('DELETE /requests/{ruuid} - delete request and associated tasks (coordinato
       t.is(res.result.message, 'Request deleted');
       t.is(res.result.tasksDeleted, 3);
     });
+});
+
+//
+// PATCH requests
+//
+
+test('PATCH /requests/{requuid} - update request (invalid role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'test',
+      roles: ['invalid']
+    },
+    payload: {
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('PATCH /requests/{requuid} - update request (surveyor role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'surveyor',
+      roles: ['surveyor']
+    },
+    payload: {
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('PATCH /requests/{requuid} - update non existen request (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(999)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+    }
+  }).then(res => {
+    t.is(res.statusCode, 404, 'Status code is 404');
+    t.is(res.result.message, 'Request does not exist');
+  });
+});
+
+test('PATCH /requests/{requuid} - not set name as null (coordinator role)', t => {
+  // Name as status cannot be set to null.
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: null
+    }
+  }).then(res => {
+    t.is(res.statusCode, 400, 'Status code is 400');
+    var results = res.result;
+    t.regex(results.message, /child "name" fails/);
+  });
+});
+
+test('PATCH /requests/{requuid} - not set status as null (coordinator role)', t => {
+  // Name as status cannot be set to null.
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: null
+    }
+  }).then(res => {
+    t.is(res.statusCode, 400, 'Status code is 400');
+    var results = res.result;
+    t.regex(results.message, /child "status" fails/);
+  });
+});
+
+test('PATCH /requests/{requuid} - change name (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: 'new request name'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.is(results.name, 'new request name');
+  });
+});
+
+test('PATCH /requests/{requuid} - set allowed values to null (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      requestingOrg: null,
+      gsd: null,
+      productType: null,
+      purpose: null,
+      use: null,
+      notes: null,
+      timePeriodRequestedFrom: null
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.is(results.requestingOrg, null);
+    t.is(results.gsd, null);
+    t.is(results.productType, null);
+    t.is(results.purpose, null);
+    t.is(results.use, null);
+    t.is(results.notes, null);
+    // When changing `from` to null, `to` also changes.
+    t.is(results.timePeriodRequested.from, null);
+    t.is(results.timePeriodRequested.to, null);
+  });
 });
