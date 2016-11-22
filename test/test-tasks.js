@@ -170,13 +170,34 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (coordinator role)',
       roles: ['coordinator']
     },
     payload: {
-      name: 'new name'
+      name: 'new name',
+      assigneeId: null
     }
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.is(results.name, 'new name');
     t.is(results.deliveryTime.toISOString(), '2016-11-30T00:00:00.000Z');
+  });
+});
+
+test('PATCH /requests/{requuid}/tasks/{tuuid} - not set geometry as null (coordinator role)', t => {
+  // Should not be possible to set geometry as null.
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: 'new name',
+      geometry: null
+    }
+  }).then(res => {
+    t.is(res.statusCode, 400, 'Status code is 400');
+    var results = res.result;
+    t.regex(results.message, /child "geometry" fails/);
   });
 });
 

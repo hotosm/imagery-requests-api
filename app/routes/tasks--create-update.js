@@ -31,7 +31,7 @@ module.exports = [
       const userId = req.auth.credentials.user_id;
       const data = req.payload;
 
-      Task.findOne({_id: req.params.tuuid}, (err, task) => {
+      Task.findById(req.params.tuuid, (err, task) => {
         if (err) return reply(Boom.badImplementation(err));
 
         if (!task) return reply(Boom.notFound('Task does not exist'));
