@@ -7,6 +7,11 @@ module.exports = {
   },
   mongo: {
     uri: null,
-    test_uri: null
+    testUri: null
+  },
+
+  auth0: {
+    secret: null,
+    clientId: null
   }
 };

@@ -5,8 +5,10 @@
   "repository": "https://github.com/hotosm/imagery-requests-api",
   "main": "",
   "scripts": {
+    "setupdb": "bash .build_files/setup-db.sh",
     "lint": "eslint app/ --ext .js",
-    "test": "npm run lint && mocha test/test-** --require babel-register",
+    "test": "npm run test-script",
+    "test-script": "NODE_ENV='test' ava test",
     "start": "node index.js",
     "nodemon": "nodemon index.js",
     "postinstall": "[ -f app/config/local.js ] || echo 'module.exports = {};' > app/config/local.js"
@@ -15,6 +17,7 @@
   "license": "",
   "homepage": "https://github.com/hotosm/imagery-requests-api",
   "dependencies": {
+    "async": "^2.1.2",
     "babel-preset-es2015": "^6.18.0",
     "babel-register": "^6.18.0",
     "boom": "^4.2.0",
@@ -23,18 +26,30 @@
     "good-console": "^6.3.1",
     "good-squeeze": "^5.0.0",
     "hapi": "^15.2.0",
+    "hapi-auth-jwt2": "^7.2.0",
+    "hapi-paginate": "github:developmentseed/hapi-paginate#cfa9067d634e2bcef9a631ee71646cc9dbf2f5f7",
     "hapi-router": "^3.5.0",
+    "joi": "^10.0.0",
     "lodash": "^4.17.0",
     "mongoose": "^4.6.7"
   },
   "devDependencies": {
-    "chai": "^3.5.0",
+    "ava": "^0.17.0",
     "eslint": "^3.0.1",
     "eslint-config-standard": "^6.0.0-beta",
     "eslint-plugin-promise": "^3.3.0",
     "eslint-plugin-standard": "^2.0.0",
-    "mocha": "^3.1.2",
+    "inject-then": "^2.0.7",
     "nodemon": "^1.11.0",
-    "request": "^2.78.0"
+    "nyc": "^9.0.1"
+  },
+  "ava": {
+    "files": [
+      "test/test-*.js"
+    ],
+    "require": [
+      "babel-register"
+    ],
+    "babel": "inherit"
   }
 }

@@ -4,6 +4,9 @@ module.exports = [
   {
     path: '/',
     method: 'GET',
+    config: {
+      auth: false
+    },
     handler: (request, reply) => {
       reply({
         statusCode: 200,
