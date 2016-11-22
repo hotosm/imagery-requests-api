@@ -28,7 +28,7 @@ module.exports = [
     handler: (req, reply) => {
       const roles = req.auth.credentials && req.auth.credentials.roles || [];
 
-      if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') === -1) {
+      if (roles.indexOf('coordinator') === -1) {
         return reply(Boom.unauthorized('Not authorized to perform this action'));
       }
 

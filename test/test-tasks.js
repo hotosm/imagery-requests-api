@@ -4,20 +4,7 @@ import mongoose from 'mongoose';
 
 import config from '../app/config';
 import Server from '../app/services/server';
-
-import Request from '../app/models/request-model';
-import Task from '../app/models/task-model';
-
-function createTask (data) {
-  return new Promise((resolve, reject) => {
-    var task = new Task(data);
-    task.addUpdate(data.authorId, 'open', 'Task was created');
-    task.save((err, task) => {
-      if (err) reject(err);
-      else resolve(task);
-    });
-  });
-}
+import {createTask, createRequest, rid, tid} from './utils/utils';
 
 var options = {
   connection: {port: 2000, host: '0.0.0.0'},
@@ -37,39 +24,36 @@ test.cb.before(t => {
   });
 
   mongoose.connection.once('open', () => {
-    var rid = '000000000000000000000001';
-    var request = new Request({
-      _id: rid,
+    var reqId = rid(1);
+
+    var allTasks = Promise.all([
+      createTask({_id: tid(0), requestId: reqId, name: 'task 1', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
+      createTask({
+        _id: tid(1),
+        requestId: reqId,
+        name: 'task 2',
+        authorId: 'coordinator-userid',
+        assigneeId: 'assigned-surveyor',
+
+        geometry: [[10, 20], [20, 10]],
+        deliveryTime: '2016-11-30T00:00:00.000Z',
+        timePeriodProvided: {
+          from: '2016-11-01T00:00:00.000Z',
+          to: '2016-11-21T00:00:00.000Z'
+        }
+      }),
+      createTask({_id: tid(2), requestId: reqId, name: 'task 3', authorId: 'coordinator-userid'}),
+      createTask({_id: tid(3), requestId: reqId, name: 'task 4', authorId: 'coordinator-userid'})
+    ]);
+
+    createRequest({
+      _id: reqId,
       authorId: 'coordinator-userid',
       name: 'test request',
       status: 'open'
-    });
-
-    request.save((err, request) => {
-      if (err) throw err;
-
-      Promise.all([
-        createTask({_id: '999999999999999999990000', requestId: rid, name: 'task 1', authorId: 'coordinator-userid'}),
-        createTask({
-          _id: '999999999999999999990001',
-          requestId: rid,
-          name: 'task 2',
-          authorId: 'coordinator-userid',
-          assigneeId: 'assigned-surveyor',
-
-          geometry: [[10, 20], [20, 10]],
-          deliveryTime: '2016-11-31T00:00:00.000Z',
-          timePeriodProvided: {
-            from: '2016-11-01T00:00:00.000Z',
-            to: '2016-11-21T00:00:00.000Z'
-          }
-        }),
-        createTask({_id: '999999999999999999990002', requestId: rid, name: 'task 3', authorId: 'coordinator-userid'}),
-        createTask({_id: '999999999999999999990003', requestId: rid, name: 'task 4', authorId: 'coordinator-userid'})
-      ]).then(results => {
-        t.end();
-      });
-    });
+    })
+    .then(request => allTasks)
+    .then(results => t.end());
   });
 });
 
@@ -78,28 +62,53 @@ test.cb.after.always(t => {
 });
 
 //
-// GET
+// GET request tasks
+//
 
 test('GET /requests/{requuid}/tasks - list all request tasks (public)', t => {
   return instance.injectThen({
     method: 'GET',
-    url: '/requests/000000000000000000000001/tasks'
+    url: `/requests/${rid(1)}/tasks`
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.true(results.meta !== undefined);
-    t.is(results.results.length, 4);
+    t.true(results.results.length >= 4);
     t.is(results.results[0].name, 'task 1');
   });
 });
 
 //
+// GET specific task
+//
+
+test('GET /requests/{requuid}/tasks/{tuuid} - get specific task (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.name, 'task 1');
+  });
+});
+
+test('GET /requests/{requuid}/tasks/{tuuid} - get specific task (not found)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: `/requests/${rid(1)}/tasks/${tid(99999)}`
+  }).then(res => {
+    t.is(res.statusCode, 404, 'Status code is 404');
+  });
+});
+
+//
 // PATCH
+//
 
 test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (invalid role)', t => {
   return instance.injectThen({
     method: 'PATCH',
-    url: '/requests/000000000000000000000001/tasks/999999999999999999990000',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
     credentials: {
       user_id: 'test',
       roles: ['invalid']
@@ -115,10 +124,10 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (invalid role)', t =
 test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (surveyor role unassigned)', t => {
   return instance.injectThen({
     method: 'PATCH',
-    url: '/requests/000000000000000000000001/tasks/999999999999999999990000',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
     credentials: {
-      user_id: 'test',
-      roles: ['invalid']
+      user_id: 'unassigned-surveyor',
+      roles: ['surveyor']
     },
     payload: {
     }
@@ -131,7 +140,7 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (surveyor role unass
 test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (surveyor role assigned)', t => {
   return instance.injectThen({
     method: 'PATCH',
-    url: '/requests/000000000000000000000001/tasks/999999999999999999990001',
+    url: `/requests/${rid(1)}/tasks/${tid(1)}`,
     credentials: {
       user_id: 'assigned-surveyor',
       roles: ['surveyor']
@@ -146,6 +155,7 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (surveyor role assig
     var results = res.result;
     t.is(results.name, 'new name');
     t.is(results.deliveryTime, null);
+    // When changing `from` to null, `to` also changes.
     t.is(results.timePeriodProvided.from, null);
     t.is(results.timePeriodProvided.to, null);
   });
@@ -154,9 +164,9 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (surveyor role assig
 test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (coordinator role)', t => {
   return instance.injectThen({
     method: 'PATCH',
-    url: '/requests/000000000000000000000001/tasks/999999999999999999990000',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
     credentials: {
-      user_id: 'assigned-coordinator',
+      user_id: 'coordinator',
       roles: ['coordinator']
     },
     payload: {
@@ -166,12 +176,235 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (coordinator role)',
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.is(results.name, 'new name');
+    t.is(results.deliveryTime.toISOString(), '2016-11-30T00:00:00.000Z');
   });
 });
 
-// Delete
 //
-// Create
+// POST updates
 //
-// Task updates
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (invalid role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}/updates`,
+    credentials: {
+      user_id: 'invalid',
+      roles: ['invalid']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (surveyor role unassigned)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}/updates`,
+    credentials: {
+      user_id: 'unassigned-surveyor',
+      roles: ['surveyor']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (non existent task)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(9999999)}/updates`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 404, 'Status code is 404');
+    t.is(res.result.message, 'Task does not exist');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (surveyor role assigned)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(1)}/updates`,
+    credentials: {
+      user_id: 'assigned-surveyor',
+      roles: ['surveyor']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var update = res.result.updates[res.result.updates.length - 1];
+    t.is(update.authorId, 'assigned-surveyor');
+    t.is(update.status, 'unchanged');
+    t.is(update.comment, 'Flight not possible, bad weather conditions');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}/updates`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var update = res.result.updates[res.result.updates.length - 1];
+    t.is(update.authorId, 'coordinator');
+    t.is(update.status, 'unchanged');
+    t.is(update.comment, 'Flight not possible, bad weather conditions');
+  });
+});
+
 //
+// POST create task
+//
+
+test('POST /requests/{requuid}/tasks - add task (invalid role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks`,
+    credentials: {
+      user_id: 'invalid',
+      roles: ['invalid']
+    },
+    payload: {
+      name: 'adding new task',
+      geometry: [[0, 0], [1, 1]]
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('POST /requests/{requuid}/tasks - add task (surveyor role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks`,
+    credentials: {
+      user_id: 'surveyor',
+      roles: ['surveyor']
+    },
+    payload: {
+      name: 'adding new task',
+      geometry: [[0, 0], [1, 1]]
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('POST /requests/{requuid}/tasks - add task (non existent request)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${tid(99999)}/tasks`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: 'adding new task',
+      geometry: [[0, 0], [1, 1]]
+    }
+  }).then(res => {
+    t.is(res.statusCode, 404, 'Status code is 404');
+    t.is(res.result.message, 'Request does not exist');
+  });
+});
+
+test('POST /requests/{requuid}/tasks - add task (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: 'adding new task',
+      geometry: [[0, 0], [1, 1]]
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var task = res.result.results;
+    t.is(task.name, 'adding new task');
+    t.deepEqual(task.geometry, [[0, 0], [1, 1]]);
+    t.is(task.updates[0].status, 'open');
+    t.is(task.updates[0].comment, 'Task was created');
+  });
+});
+
+//
+// DELETE task
+//
+
+test('DELETE /requests/{requuid}/tasks - add task (invalid role)', t => {
+  return instance.injectThen({
+    method: 'DELETE',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
+    credentials: {
+      user_id: 'invalid',
+      roles: ['invalid']
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('DELETE /requests/{requuid}/tasks - add task (surveyor role)', t => {
+  return instance.injectThen({
+    method: 'DELETE',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
+    credentials: {
+      user_id: 'surveyor',
+      roles: ['surveyor']
+    }
+  }).then(res => {
+    t.is(res.statusCode, 401, 'Status code is 401');
+    t.is(res.result.message, 'Not authorized to perform this action', 'Not authorized to perform this action');
+  });
+});
+
+test('DELETE /requests/{requuid}/tasks - add task (coordinator role)', t => {
+  // Create a task to be deleted.
+  return createTask({_id: tid(8), requestId: rid(1), name: 'to delete', authorId: 'coordinator-userid'})
+    .then((task) => instance.injectThen({
+      method: 'DELETE',
+      url: `/requests/${rid(1)}/tasks/${tid(8)}`,
+      credentials: {
+        user_id: 'coordinator',
+        roles: ['coordinator']
+      }
+    }))
+    .then(res => {
+      t.is(res.statusCode, 200, 'Status code is 200');
+      t.is(res.result.message, 'Task deleted');
+    });
+});
