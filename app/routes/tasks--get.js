@@ -5,7 +5,7 @@ import Task from '../models/task-model';
 
 module.exports = [
   {
-    /* Get all tasks for a request */
+    /* Get a specific task */
     method: 'GET',
     path: '/requests/{requuid}/tasks/{tuuid}',
     config: {
