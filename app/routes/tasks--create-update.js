@@ -43,6 +43,12 @@ module.exports = [
           }
         }
 
+        // The task status only changes if the status is valid.
+        // However an update can have `unchanged` as status.
+        if (['open', 'inprogress', 'completed'].indexOf(data.status) !== -1) {
+          task.set('status', data.status);
+        }
+
         task.addUpdate(userId, data.status, data.comment);
 
         task.save((err, newTask) => {
