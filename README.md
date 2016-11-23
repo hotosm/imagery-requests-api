@@ -41,10 +41,19 @@ You'll need to set the `auth0` credentials using the config files:
 ```
   auth0: {
     secret: '',
-    clientId: ''
+    clientId: '',
+    api: '',
+    manageToken: ''
   }
 ```
-Or the corresponding environment variables `AUTH0_SECRET` and `AUTH0_CLIENT_ID`
+Or the corresponding environment variables `AUTH0_SECRET`, `AUTH0_CLIENT_ID`, `AUTH0_URL`, `AUTH0_MANAGE_TOKEN`
+
+#### Manage token
+The auth0 manage token is used to query the auth0 api to get information about the users. The easiest way to get one it to use token generator on their [documentation page](https://auth0.com/docs/api/management/v2). Scopes needed:
+```
+read:users
+```
+
 There are 2 tokens below that can be used for testing purposes. Note that these tokens are only valid using the appropriate auth0 secret.
 
 To see the content of the JWT use https://jwt.io/

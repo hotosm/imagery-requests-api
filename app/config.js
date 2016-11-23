@@ -25,6 +25,12 @@ config.mongo.uri = process.env.MONGO_URI || config.mongo.uri;
 config.mongo.testUri = process.env.MONGO_TESTURI || config.mongo.testUri;
 config.auth0.secret = process.env.AUTH0_SECRET || config.auth0.secret;
 config.auth0.clientId = process.env.AUTH0_CLIENT_ID || config.auth0.clientId;
+config.auth0.url = process.env.AUTH0_URL || config.auth0.url;
+config.auth0.manageToken = process.env.AUTH0_MANAGE_TOKEN || config.auth0.manageToken;
+
+if (!config.auth0.secret || !config.auth0.clientId || !config.auth0.manageToken) {
+  throw new Error('Missing auth0 credentials');
+}
 
 config.baseDir = __dirname;
 
