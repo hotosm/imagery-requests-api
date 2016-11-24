@@ -1,8 +1,9 @@
 import Boom from 'boom';
 import Joi from 'joi';
-import async from 'async';
+import _ from 'lodash';
 
 import Request from '../models/request-model';
+import Task from '../models/task-model';
 
 module.exports = [
   {
@@ -17,16 +18,30 @@ module.exports = [
 
       // TODO: Add filters.
 
-      async.parallel([
-        (cb) => Request.count(cb),
-        (cb) => Request.find().skip(skip).limit(req.limit).exec(cb)
-      ], (err, res) => {
-        if (err) {
-          return reply(Boom.badImplementation(err));
-        }
+      Promise.all([
+        Request.count(),
+        Request.find().skip(skip).limit(req.limit).exec()
+      ]).then(results => {
+        var [count, rawRequests] = results;
+        return Promise.all(rawRequests.map(o => Task.find({requestId: o._id}, {status: true}).exec()))
+          .then(allReqTasks => {
+            // Add the task count to the requests.
+            let requests = rawRequests.map((r, i) => {
+              // Convert from mongoose model to object.
+              r = r.toObject();
+              r.tasksInfo = {
+                total: allReqTasks[i].length,
+                status: _.countBy(allReqTasks[i], 'status')
+              };
 
-        req.count = res[0];
-        return reply(res[1]);
+              return r;
+            });
+
+            return [count, requests];
+          }).then(results => {
+            req.count = results[0];
+            reply(results[1]);
+          });
       });
     }
   },
@@ -43,13 +58,11 @@ module.exports = [
       }
     },
     handler: (req, reply) => {
-      Request.findOne({_id: req.params.uuid}, (err, request) => {
-        if (err) return reply(Boom.badImplementation(err));
-
-        if (!request) return reply(Boom.notFound());
-
-        reply(request);
-      });
+      Request.findById(req.params.uuid)
+        .then(request => {
+          if (!request) return reply(Boom.notFound());
+          reply(request);
+        }).catch(err => reply(Boom.badImplementation(err)));
     }
   }
 ];
