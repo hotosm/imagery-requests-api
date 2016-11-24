@@ -61,7 +61,16 @@ module.exports = [
       Request.findById(req.params.uuid)
         .then(request => {
           if (!request) return reply(Boom.notFound());
-          reply(request);
+
+          Task.find({requestId: request._id}, {status: true})
+            .then(tasks => {
+              request = request.toObject();
+              request.tasksInfo = {
+                total: tasks.length,
+                status: _.countBy(tasks, 'status')
+              };
+              reply(request);
+            });
         }).catch(err => reply(Boom.badImplementation(err)));
     }
   }
