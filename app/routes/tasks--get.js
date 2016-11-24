@@ -5,7 +5,7 @@ import Task from '../models/task-model';
 
 module.exports = [
   {
-    /* Get all tasks for a request */
+    /* Get a specific task */
     method: 'GET',
     path: '/requests/{requuid}/tasks/{tuuid}',
     config: {
@@ -18,7 +18,7 @@ module.exports = [
       }
     },
     handler: (req, reply) => {
-      Task.findOne({_id: req.params.tuuid}, (err, task) => {
+      Task.findById(req.params.tuuid, (err, task) => {
         if (err) return reply(Boom.badImplementation(err));
 
         if (!task) return reply(Boom.notFound());

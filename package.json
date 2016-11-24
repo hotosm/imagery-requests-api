@@ -6,7 +6,7 @@
   "main": "",
   "scripts": {
     "setupdb": "bash .build_files/setup-db.sh",
-    "lint": "eslint app/ --ext .js",
+    "lint": "eslint app/ test/ --ext .js",
     "test": "npm run test-script",
     "test-script": "NODE_ENV='test' ava",
     "start": "node index.js",

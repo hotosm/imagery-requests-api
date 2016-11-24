@@ -45,6 +45,8 @@ module.exports = [
           name: data.name,
           geometry: data.geometry,
 
+          status: 'open',
+
           requestId: req.params.requuid,
 
           assigneeId: data.assigneeId || null,

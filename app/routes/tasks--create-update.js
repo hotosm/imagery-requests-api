@@ -31,7 +31,7 @@ module.exports = [
       const userId = req.auth.credentials.user_id;
       const data = req.payload;
 
-      Task.findOne({_id: req.params.tuuid}, (err, task) => {
+      Task.findById(req.params.tuuid, (err, task) => {
         if (err) return reply(Boom.badImplementation(err));
 
         if (!task) return reply(Boom.notFound('Task does not exist'));
@@ -41,6 +41,12 @@ module.exports = [
           if (task.assigneeId !== userId) {
             return reply(Boom.unauthorized('Not authorized to perform this action'));
           }
+        }
+
+        // The task status only changes if the status is valid.
+        // However an update can have `unchanged` as status.
+        if (['open', 'inprogress', 'completed'].indexOf(data.status) !== -1) {
+          task.set('status', data.status);
         }
 
         task.addUpdate(userId, data.status, data.comment);

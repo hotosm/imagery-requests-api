@@ -32,6 +32,10 @@ if (!config.auth0.secret || !config.auth0.clientId || !config.auth0.manageToken)
   throw new Error('Missing auth0 credentials');
 }
 
+if (!config.auth0.secret || !config.auth0.clientId) {
+  throw new Error('Missing auth0 credentials');
+}
+
 config.baseDir = __dirname;
 
 module.exports = config;

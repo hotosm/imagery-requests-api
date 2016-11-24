@@ -2,6 +2,8 @@ import Hapi from 'hapi';
 import config from '../config';
 import mongoose from 'mongoose';
 
+mongoose.Promise = Promise;
+
 module.exports = function (options) {
   var server = {};
 

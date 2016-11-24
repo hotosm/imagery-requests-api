@@ -12,6 +12,8 @@ const taskSchema = mongoose.Schema({
   requestId: mongoose.Schema.Types.ObjectId,
   assigneeId: String,
 
+  status: String,
+
   name: String,
   geometry: [],
 

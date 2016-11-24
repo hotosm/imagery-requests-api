@@ -27,11 +27,12 @@ test.cb.before(t => {
     var reqId = rid(1);
 
     var allTasks = Promise.all([
-      createTask({_id: tid(0), requestId: reqId, name: 'task 1', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
+      createTask({_id: tid(0), requestId: reqId, name: 'task 1', status: 'open', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
       createTask({
         _id: tid(1),
         requestId: reqId,
         name: 'task 2',
+        status: 'open',
         authorId: 'coordinator-userid',
         assigneeId: 'assigned-surveyor',
 
@@ -42,8 +43,8 @@ test.cb.before(t => {
           to: '2016-11-21T00:00:00.000Z'
         }
       }),
-      createTask({_id: tid(2), requestId: reqId, name: 'task 3', authorId: 'coordinator-userid'}),
-      createTask({_id: tid(3), requestId: reqId, name: 'task 4', authorId: 'coordinator-userid'})
+      createTask({_id: tid(2), requestId: reqId, name: 'task 3', status: 'open', authorId: 'coordinator-userid'}),
+      createTask({_id: tid(3), requestId: reqId, name: 'task 4', status: 'open', authorId: 'coordinator-userid'})
     ]);
 
     createRequest({
@@ -170,13 +171,54 @@ test('PATCH /requests/{requuid}/tasks/{tuuid} - update task (coordinator role)',
       roles: ['coordinator']
     },
     payload: {
-      name: 'new name'
+      name: 'new name',
+      assigneeId: null
     }
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.is(results.name, 'new name');
     t.is(results.deliveryTime.toISOString(), '2016-11-30T00:00:00.000Z');
+  });
+});
+
+test('PATCH /requests/{requuid}/tasks/{tuuid} - update task status (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: 'new status',
+      assigneeId: null
+    }
+  }).then(res => {
+    // Status can only be set through updates.
+    t.is(res.statusCode, 400, 'Status code is 400');
+    var results = res.result;
+    t.is(results.message, '"status" is not allowed');
+  });
+});
+
+test('PATCH /requests/{requuid}/tasks/{tuuid} - not set geometry as null (coordinator role)', t => {
+  // Should not be possible to set geometry as null.
+  return instance.injectThen({
+    method: 'PATCH',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      name: 'new name',
+      geometry: null
+    }
+  }).then(res => {
+    t.is(res.statusCode, 400, 'Status code is 400');
+    var results = res.result;
+    t.regex(results.message, /child "geometry" fails/);
   });
 });
 
@@ -252,6 +294,7 @@ test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (surveyor
     }
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.status, 'open');
     var update = res.result.updates[res.result.updates.length - 1];
     t.is(update.authorId, 'assigned-surveyor');
     t.is(update.status, 'unchanged');
@@ -273,10 +316,33 @@ test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (coordina
     }
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.status, 'open');
     var update = res.result.updates[res.result.updates.length - 1];
     t.is(update.authorId, 'coordinator');
     t.is(update.status, 'unchanged');
     t.is(update.comment, 'Flight not possible, bad weather conditions');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - status update complete (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}/updates`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: 'completed',
+      comment: 'Imagery acquired'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.status, 'completed');
+    var update = res.result.updates[res.result.updates.length - 1];
+    t.is(update.authorId, 'coordinator');
+    t.is(update.status, 'completed');
+    t.is(update.comment, 'Imagery acquired');
   });
 });
 
