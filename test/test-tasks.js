@@ -90,6 +90,7 @@ test('GET /requests/{requuid}/tasks/{tuuid} - get specific task (public)', t => 
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     t.is(res.result.name, 'task 1');
+    t.is(res.result.requestInfo.name, 'test request');
   });
 });
 

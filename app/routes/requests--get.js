@@ -59,11 +59,13 @@ module.exports = [
             });
 
             return [count, requests];
-          }).then(results => {
-            req.count = results[0];
-            reply(results[1]);
           });
-      });
+      })
+      .then(results => {
+        req.count = results[0];
+        reply(results[1]);
+      })
+      .catch(err => reply(Boom.badImplementation(err)));
     }
   },
   {
@@ -81,18 +83,20 @@ module.exports = [
     handler: (req, reply) => {
       Request.findById(req.params.uuid)
         .then(request => {
-          if (!request) return reply(Boom.notFound());
+          if (!request) throw Boom.notFound();
 
-          Task.find({requestId: request._id}, {status: true})
+          return Task.find({requestId: request._id}, {status: true})
             .then(tasks => {
               request = request.toObject();
               request.tasksInfo = {
                 total: tasks.length,
                 status: _.countBy(tasks, 'status')
               };
-              reply(request);
+              return request;
             });
-        }).catch(err => reply(Boom.badImplementation(err)));
+        })
+        .then(request => reply(request))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];

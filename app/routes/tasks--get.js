@@ -1,6 +1,7 @@
 import Boom from 'boom';
 import Joi from 'joi';
 
+import Request from '../models/request-model';
 import Task from '../models/task-model';
 
 module.exports = [
@@ -18,13 +19,19 @@ module.exports = [
       }
     },
     handler: (req, reply) => {
-      Task.findById(req.params.tuuid, (err, task) => {
-        if (err) return reply(Boom.badImplementation(err));
+      Task.findById(req.params.tuuid)
+        .then(task => {
+          if (!task) throw Boom.notFound();
 
-        if (!task) return reply(Boom.notFound());
-
-        reply(task);
-      });
+          return Request.findById(task.requestId, {name: true})
+            .then(request => {
+              task = task.toObject();
+              task.requestInfo = {name: request.name};
+              return task;
+            });
+        })
+        .then(task => reply(task))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];
