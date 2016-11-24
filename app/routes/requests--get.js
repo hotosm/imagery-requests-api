@@ -5,22 +5,43 @@ import _ from 'lodash';
 import Request from '../models/request-model';
 import Task from '../models/task-model';
 
+const requestStatus = ['open', 'closed', 'canceled'];
+
 module.exports = [
   {
     /* Get all requests */
     method: 'GET',
     path: '/requests',
     config: {
-      auth: false
+      auth: false,
+      validate: {
+        query: {
+          page: Joi.number(),
+          limit: Joi.number(),
+          author: Joi.string(),
+          status: Joi.alternatives(
+            Joi.array().items(Joi.string().valid(requestStatus)),
+            Joi.string().valid(requestStatus)
+          )
+        }
+      }
     },
     handler: (req, reply) => {
       let skip = (req.page - 1) * req.limit;
 
-      // TODO: Add filters.
+      // Filters.
+      let filters = {};
+      if (req.query.status) {
+        let status = !_.isArray(req.query.status) ? [req.query.status] : req.query.status;
+        filters.status = { $in: status };
+      }
+      if (req.query.author) {
+        filters.authorId = req.query.author;
+      }
 
       Promise.all([
-        Request.count(),
-        Request.find().skip(skip).limit(req.limit).exec()
+        Request.count(filters),
+        Request.find(filters).skip(skip).limit(req.limit).exec()
       ]).then(results => {
         var [count, rawRequests] = results;
         return Promise.all(rawRequests.map(o => Task.find({requestId: o._id}, {status: true}).exec()))

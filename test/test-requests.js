@@ -49,9 +49,9 @@ test.cb.before(t => {
       }),
       createRequest({
         _id: rid(3),
-        authorId: 'coordinator',
+        authorId: 'coordinator2',
         name: 'test request 3',
-        status: 'open'
+        status: 'closed'
       }),
       createRequest({
         _id: rid(4),
@@ -81,7 +81,7 @@ test('GET /requests - list all requests (public)', t => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.true(results.meta !== undefined);
-    t.true(results.results.length >= 3);
+    t.true(results.results.length >= 4);
     t.is(results.results[0].name, 'test request 1');
   });
 });
@@ -98,6 +98,43 @@ test('GET /requests - list requests with task info (public)', t => {
     t.is(theRequest.tasksInfo.total, 2);
     t.is(theRequest.tasksInfo.status.open, 1);
     t.is(theRequest.tasksInfo.status.completed, 1);
+  });
+});
+
+//
+// GET all requests with filters
+//
+test('GET /requests - list all requests filter status (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?status=open'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results.length === 3);
+  });
+});
+
+test('GET /requests - list all requests filter status multiple (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?status=open&status=closed'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results.length === 4);
+  });
+});
+
+test('GET /requests - list all requests filter author (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?author=coordinator2'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results.length === 1);
+    t.is(results.results[0].name, 'test request 3');
   });
 });
 
