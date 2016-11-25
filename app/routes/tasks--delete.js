@@ -24,11 +24,9 @@ module.exports = [
         return reply(Boom.unauthorized('Not authorized to perform this action'));
       }
 
-      Task.remove({_id: req.params.tuuid}, (err) => {
-        if (err) return reply(Boom.badImplementation(err));
-
-        reply({statusCode: 200, message: 'Task deleted'});
-      });
+      Task.remove({_id: req.params.tuuid})
+        .then(res => reply({statusCode: 200, message: 'Task deleted'}))
+        .catch(err => reply(Boom.badImplementation(err)));
     }
   }
 ];

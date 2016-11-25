@@ -35,40 +35,34 @@ module.exports = [
       const userId = req.auth.credentials.user_id;
       const data = req.payload;
 
-      Request.findOne({_id: req.params.requuid}, (err, request) => {
-        if (err) return reply(Boom.badImplementation(err));
+      Request.findOne({_id: req.params.requuid})
+        .then(request => {
+          if (!request) throw Boom.notFound('Request does not exist');
 
-        if (!request) return reply(Boom.notFound('Request does not exist'));
+          let task = new Task({
+            authorId: userId,
+            name: data.name,
+            geometry: data.geometry,
 
-        let task = new Task({
-          authorId: userId,
-          name: data.name,
-          geometry: data.geometry,
+            status: 'open',
 
-          status: 'open',
+            requestId: req.params.requuid,
 
-          requestId: req.params.requuid,
+            assigneeId: data.assigneeId || null,
+            deliveryTime: data.deliveryTime || null,
 
-          assigneeId: data.assigneeId || null,
-          deliveryTime: data.deliveryTime || null,
+            timePeriodProvided: {
+              from: data.timePeriodProvidedFrom || null,
+              to: data.timePeriodProvidedTo || null
+            }
+          });
 
-          timePeriodProvided: {
-            from: data.timePeriodProvidedFrom || null,
-            to: data.timePeriodProvidedTo || null
-          }
-        });
+          task.addUpdate(userId, 'open', 'Task was created');
 
-        task.addUpdate(userId, 'open', 'Task was created');
-
-        task.save((err, newTask) => {
-          if (err) {
-            console.error(err);
-            return reply(Boom.badImplementation(err));
-          }
-
-          return reply(newTask);
-        });
-      });
+          return task.save();
+        })
+        .then(newTask => reply(newTask))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];

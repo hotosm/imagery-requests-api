@@ -22,17 +22,15 @@ module.exports = [
 
       // TODO: Add filters.
 
-      async.parallel([
-        (cb) => Task.count({requestId: req.params.requuid}, cb),
-        (cb) => Task.find({requestId: req.params.requuid}).skip(skip).limit(req.limit).exec(cb)
-      ], (err, res) => {
-        if (err) {
-          return reply(Boom.badImplementation(err));
-        }
-
+      Promise.all([
+        Task.count({requestId: req.params.requuid}),
+        Task.find({requestId: req.params.requuid}).skip(skip).limit(req.limit).exec()
+      ])
+      .then(res => {
         req.count = res[0];
         return reply(res[1]);
-      });
+      })
+      .catch(err => reply(Boom.badImplementation(err)));
     }
   }
 ];
