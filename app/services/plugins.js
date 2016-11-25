@@ -60,7 +60,8 @@ module.exports = function (hapiServer, cb) {
           limit: 100,
           routes: [
             '/requests',
-            '/requests/{requuid}/tasks'
+            '/requests/{requuid}/tasks',
+            '/users/{uuid}/tasks'
           ]
         }
       }
