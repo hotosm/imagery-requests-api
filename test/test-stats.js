@@ -1,10 +1,9 @@
 'use strict';
 import test from 'ava';
-import mongoose from 'mongoose';
 
 import config from '../app/config';
 import Server from '../app/services/server';
-import {createRequest, rid} from './utils/utils';
+import {createRequest, rid, connectDb, dropDb} from './utils/utils';
 
 var options = {
   connection: {port: 2000, host: '0.0.0.0'},
@@ -13,43 +12,38 @@ var options = {
 
 var instance = Server(options).hapi;
 
-test.cb.before(t => {
+test.before(t => {
   instance.register(require('inject-then'), function (err) {
     if (err) throw err;
   });
 
-  mongoose.connect(config.mongo.testUri);
-  mongoose.connection.on('error', function (err) {
-    throw err;
-  });
-
-  mongoose.connection.once('open', () => {
-    Promise.all([
-      createRequest({
-        _id: rid(1),
-        authorId: 'coordinator-userid',
-        name: 'test request 1',
-        status: 'open'
-      }),
-      createRequest({
-        _id: rid(2),
-        authorId: 'coordinator-userid',
-        name: 'test request 2',
-        status: 'open'
-      }),
-      createRequest({
-        _id: rid(3),
-        authorId: 'coordinator-userid',
-        name: 'test request 3',
-        status: 'closed'
-      })
-    ])
-    .then(results => t.end());
-  });
+  return connectDb(config.mongo.testUri)
+    .then(() => {
+      return Promise.all([
+        createRequest({
+          _id: rid(1),
+          authorId: 'coordinator-userid',
+          name: 'test request 1',
+          status: 'open'
+        }),
+        createRequest({
+          _id: rid(2),
+          authorId: 'coordinator-userid',
+          name: 'test request 2',
+          status: 'open'
+        }),
+        createRequest({
+          _id: rid(3),
+          authorId: 'coordinator-userid',
+          name: 'test request 3',
+          status: 'closed'
+        })
+      ]);
+    });
 });
 
-test.cb.after.always(t => {
-  mongoose.connection.db.dropDatabase(t.end);
+test.after.always(t => {
+  return dropDb();
 });
 
 //

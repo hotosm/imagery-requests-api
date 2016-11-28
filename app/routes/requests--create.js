@@ -54,14 +54,12 @@ module.exports = [
         notes: data.notes || null
       });
 
-      request.save((err, newRequest) => {
-        if (err) {
+      request.save()
+        .then(newRequest => reply(newRequest))
+        .catch(err => {
           console.error(err);
           return reply(Boom.badImplementation(err));
-        }
-
-        return reply(newRequest);
-      });
+        });
     }
   }
 ];

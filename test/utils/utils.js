@@ -1,3 +1,5 @@
+import mongoose from 'mongoose';
+
 import Request from '../../app/models/request-model';
 import Task from '../../app/models/task-model';
 
@@ -28,4 +30,25 @@ export function rid (no) {
 
 export function tid (no) {
   return '900000000000' + (900000000000 + no).toString();
+}
+
+export function connectDb (uri) {
+  return new Promise((resolve, reject) => {
+    mongoose.connect(uri);
+    mongoose.connection.on('error', function (err) {
+      return reject(err);
+    });
+    mongoose.connection.once('open', () => {
+      return resolve();
+    });
+  });
+}
+
+export function dropDb () {
+  return new Promise((resolve, reject) => {
+    mongoose.connection.db.dropDatabase((err, res) => {
+      if (err) return reject(err);
+      return resolve(res);
+    });
+  });
 }

@@ -1,10 +1,9 @@
 'use strict';
 import test from 'ava';
-import mongoose from 'mongoose';
 
 import config from '../app/config';
 import Server from '../app/services/server';
-import {createTask, createRequest, rid, tid} from './utils/utils';
+import {createTask, createRequest, rid, tid, connectDb, dropDb} from './utils/utils';
 
 var options = {
   connection: {port: 2000, host: '0.0.0.0'},
@@ -13,53 +12,48 @@ var options = {
 
 var instance = Server(options).hapi;
 
-test.cb.before(t => {
+test.before(t => {
   instance.register(require('inject-then'), function (err) {
     if (err) throw err;
   });
 
-  mongoose.connect(config.mongo.testUri);
-  mongoose.connection.on('error', function (err) {
-    throw err;
-  });
+  return connectDb(config.mongo.testUri)
+    .then(() => {
+      var reqId = rid(1);
 
-  mongoose.connection.once('open', () => {
-    var reqId = rid(1);
+      var allTasks = Promise.all([
+        createTask({_id: tid(0), requestId: reqId, name: 'task 1', status: 'open', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
+        createTask({
+          _id: tid(1),
+          requestId: reqId,
+          name: 'task 2',
+          status: 'open',
+          authorId: 'coordinator-userid',
+          assigneeId: 'assigned-surveyor',
 
-    var allTasks = Promise.all([
-      createTask({_id: tid(0), requestId: reqId, name: 'task 1', status: 'open', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
-      createTask({
-        _id: tid(1),
-        requestId: reqId,
-        name: 'task 2',
-        status: 'open',
+          geometry: [[10, 20], [20, 10]],
+          deliveryTime: '2016-11-30T00:00:00.000Z',
+          timePeriodProvided: {
+            from: '2016-11-01T00:00:00.000Z',
+            to: '2016-11-21T00:00:00.000Z'
+          }
+        }),
+        createTask({_id: tid(2), requestId: reqId, name: 'task 3', status: 'open', authorId: 'coordinator-userid'}),
+        createTask({_id: tid(3), requestId: reqId, name: 'task 4', status: 'open', authorId: 'coordinator-userid'})
+      ]);
+
+      return createRequest({
+        _id: reqId,
         authorId: 'coordinator-userid',
-        assigneeId: 'assigned-surveyor',
-
-        geometry: [[10, 20], [20, 10]],
-        deliveryTime: '2016-11-30T00:00:00.000Z',
-        timePeriodProvided: {
-          from: '2016-11-01T00:00:00.000Z',
-          to: '2016-11-21T00:00:00.000Z'
-        }
-      }),
-      createTask({_id: tid(2), requestId: reqId, name: 'task 3', status: 'open', authorId: 'coordinator-userid'}),
-      createTask({_id: tid(3), requestId: reqId, name: 'task 4', status: 'open', authorId: 'coordinator-userid'})
-    ]);
-
-    createRequest({
-      _id: reqId,
-      authorId: 'coordinator-userid',
-      name: 'test request',
-      status: 'open'
-    })
-    .then(request => allTasks)
-    .then(results => t.end());
-  });
+        name: 'test request',
+        status: 'open'
+      })
+      .then(request => allTasks);
+    });
 });
 
-test.cb.after.always(t => {
-  mongoose.connection.db.dropDatabase(t.end);
+test.after.always(t => {
+  return dropDb();
 });
 
 //

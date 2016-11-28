@@ -31,35 +31,29 @@ module.exports = [
       const userId = req.auth.credentials.user_id;
       const data = req.payload;
 
-      Task.findById(req.params.tuuid, (err, task) => {
-        if (err) return reply(Boom.badImplementation(err));
+      Task.findById(req.params.tuuid)
+        .then(task => {
+          if (!task) throw Boom.notFound('Task does not exist');
 
-        if (!task) return reply(Boom.notFound('Task does not exist'));
-
-        if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') !== -1) {
-          // Surveyors can make changes if they're assigned to the task.
-          if (task.assigneeId !== userId) {
-            return reply(Boom.unauthorized('Not authorized to perform this action'));
-          }
-        }
-
-        // The task status only changes if the status is valid.
-        // However an update can have `unchanged` as status.
-        if (['open', 'inprogress', 'completed'].indexOf(data.status) !== -1) {
-          task.set('status', data.status);
-        }
-
-        task.addUpdate(userId, data.status, data.comment);
-
-        task.save((err, newTask) => {
-          if (err) {
-            console.error(err);
-            return reply(Boom.badImplementation(err));
+          if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') !== -1) {
+            // Surveyors can make changes if they're assigned to the task.
+            if (task.assigneeId !== userId) {
+              throw Boom.unauthorized('Not authorized to perform this action');
+            }
           }
 
-          return reply(newTask);
-        });
-      });
+          // The task status only changes if the status is valid.
+          // However an update can have `unchanged` as status.
+          if (['open', 'inprogress', 'completed'].indexOf(data.status) !== -1) {
+            task.set('status', data.status);
+          }
+
+          task.addUpdate(userId, data.status, data.comment);
+
+          return task.save();
+        })
+        .then(newTask => reply(newTask))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];

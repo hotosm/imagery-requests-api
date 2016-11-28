@@ -1,9 +1,8 @@
 'use strict';
 import test from 'ava';
-import mongoose from 'mongoose';
 
 import config from '../app/config';
-import {createRequest, createTask, rid, tid} from './utils/utils';
+import {createRequest, createTask, rid, tid, connectDb, dropDb} from './utils/utils';
 import Server from '../app/services/server';
 
 var options = {
@@ -13,60 +12,56 @@ var options = {
 
 var instance = Server(options).hapi;
 
-test.cb.before(t => {
+test.before(t => {
   instance.register(require('inject-then'), function (err) {
     if (err) throw err;
   });
 
-  mongoose.connect(config.mongo.testUri);
-  mongoose.connection.on('error', function (err) {
-    throw err;
-  });
-
-  mongoose.connection.once('open', () => {
-    Promise.all([
-      createRequest({
-        _id: rid(1),
-        authorId: 'coordinator',
-        name: 'test request 1',
-        status: 'open',
-        requestingOrg: 'the org',
-        gsd: 0.30,
-        productType: 'uav',
-        purpose: 'the purpose',
-        use: 'the imagery use',
-        notes: 'no notes',
-        timePeriodRequested: {
-          from: '2016-11-01T00:00:00.000Z',
-          to: '2016-11-21T00:00:00.000Z'
-        }
-      }),
-      createRequest({
-        _id: rid(2),
-        authorId: 'coordinator',
-        name: 'test request 2',
-        status: 'open'
-      }),
-      createRequest({
-        _id: rid(3),
-        authorId: 'coordinator2',
-        name: 'test request 3',
-        status: 'closed'
-      }),
-      createRequest({
-        _id: rid(4),
-        authorId: 'coordinator',
-        name: 'test request 4',
-        status: 'open'
-      }),
-      createTask({_id: tid(401), requestId: rid(4), name: 'task 1', authorId: 'coordinator', status: 'open'}),
-      createTask({_id: tid(402), requestId: rid(4), name: 'task 2', authorId: 'coordinator', status: 'completed'})
-    ]).then(results => t.end());
-  });
+  return connectDb(config.mongo.testUri)
+    .then(() => {
+      return Promise.all([
+        createRequest({
+          _id: rid(1),
+          authorId: 'coordinator',
+          name: 'test request 1',
+          status: 'open',
+          requestingOrg: 'the org',
+          gsd: 0.30,
+          productType: 'uav',
+          purpose: 'the purpose',
+          use: 'the imagery use',
+          notes: 'no notes',
+          timePeriodRequested: {
+            from: '2016-11-01T00:00:00.000Z',
+            to: '2016-11-21T00:00:00.000Z'
+          }
+        }),
+        createRequest({
+          _id: rid(2),
+          authorId: 'coordinator',
+          name: 'test request 2',
+          status: 'open'
+        }),
+        createRequest({
+          _id: rid(3),
+          authorId: 'coordinator2',
+          name: 'test request 3',
+          status: 'closed'
+        }),
+        createRequest({
+          _id: rid(4),
+          authorId: 'coordinator',
+          name: 'test request 4',
+          status: 'open'
+        }),
+        createTask({_id: tid(401), requestId: rid(4), name: 'task 1', authorId: 'coordinator', status: 'open'}),
+        createTask({_id: tid(402), requestId: rid(4), name: 'task 2', authorId: 'coordinator', status: 'completed'})
+      ]);
+    });
 });
 
-test.cb.after.always(t => {
-  mongoose.connection.db.dropDatabase(t.end);
+test.after.always(t => {
+  return dropDb();
 });
 
 //

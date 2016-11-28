@@ -35,40 +35,34 @@ module.exports = [
       const userId = req.auth.credentials.user_id;
       const data = req.payload;
 
-      Task.findById(req.params.tuuid, (err, task) => {
-        if (err) return reply(Boom.badImplementation(err));
+      Task.findById(req.params.tuuid)
+        .then(task => {
+          if (!task) throw Boom.notFound('Task does not exist');
 
-        if (!task) return reply(Boom.notFound('Task does not exist'));
-
-        if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') !== -1) {
-          // Surveyors can make changes if they're assigned to the task.
-          if (task.assigneeId !== userId) {
-            return reply(Boom.unauthorized('Not authorized to perform this action'));
-          }
-        }
-
-        typeof data.name !== 'undefined' && task.set('name', data.name);
-        typeof data.assigneeId !== 'undefined' && task.set('assigneeId', data.assigneeId);
-        typeof data.geometry !== 'undefined' && task.set('geometry', data.geometry);
-        typeof data.deliveryTime !== 'undefined' && task.set('deliveryTime', data.deliveryTime);
-
-        typeof data.timePeriodProvidedTo !== 'undefined' && task.set('timePeriodProvided.to', data.timePeriodProvidedTo);
-        if (typeof data.timePeriodProvidedFrom !== 'undefined') {
-          task.set('timePeriodProvided.from', data.timePeriodProvidedFrom);
-          if (data.timePeriodProvidedFrom === '' || data.timePeriodProvidedFrom === null) {
-            task.set('timePeriodProvided.to', null);
-          }
-        }
-
-        task.save((err, newTask) => {
-          if (err) {
-            console.error(err);
-            return reply(Boom.badImplementation(err));
+          if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') !== -1) {
+            // Surveyors can make changes if they're assigned to the task.
+            if (task.assigneeId !== userId) {
+              throw Boom.unauthorized('Not authorized to perform this action');
+            }
           }
 
-          return reply(newTask);
-        });
-      });
+          typeof data.name !== 'undefined' && task.set('name', data.name);
+          typeof data.assigneeId !== 'undefined' && task.set('assigneeId', data.assigneeId);
+          typeof data.geometry !== 'undefined' && task.set('geometry', data.geometry);
+          typeof data.deliveryTime !== 'undefined' && task.set('deliveryTime', data.deliveryTime);
+
+          typeof data.timePeriodProvidedTo !== 'undefined' && task.set('timePeriodProvided.to', data.timePeriodProvidedTo);
+          if (typeof data.timePeriodProvidedFrom !== 'undefined') {
+            task.set('timePeriodProvided.from', data.timePeriodProvidedFrom);
+            if (data.timePeriodProvidedFrom === '' || data.timePeriodProvidedFrom === null) {
+              task.set('timePeriodProvided.to', null);
+            }
+          }
+
+          return task.save();
+        })
+        .then(newTask => reply(newTask))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];

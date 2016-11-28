@@ -37,37 +37,31 @@ module.exports = [
 
       const data = req.payload;
 
-      Request.findById(req.params.requuid, (err, request) => {
-        if (err) return reply(Boom.badImplementation(err));
+      Request.findById(req.params.requuid)
+        .then(request => {
+          if (!request) throw Boom.notFound('Request does not exist');
 
-        if (!request) return reply(Boom.notFound('Request does not exist'));
+          typeof data.name !== 'undefined' && request.set('name', data.name);
+          typeof data.status !== 'undefined' && request.set('status', data.status);
+          typeof data.requestingOrg !== 'undefined' && request.set('requestingOrg', data.requestingOrg);
+          typeof data.gsd !== 'undefined' && request.set('gsd', data.gsd);
+          typeof data.productType !== 'undefined' && request.set('productType', data.productType);
+          typeof data.purpose !== 'undefined' && request.set('purpose', data.purpose);
+          typeof data.use !== 'undefined' && request.set('use', data.use);
+          typeof data.notes !== 'undefined' && request.set('notes', data.notes);
 
-        typeof data.name !== 'undefined' && request.set('name', data.name);
-        typeof data.status !== 'undefined' && request.set('status', data.status);
-        typeof data.requestingOrg !== 'undefined' && request.set('requestingOrg', data.requestingOrg);
-        typeof data.gsd !== 'undefined' && request.set('gsd', data.gsd);
-        typeof data.productType !== 'undefined' && request.set('productType', data.productType);
-        typeof data.purpose !== 'undefined' && request.set('purpose', data.purpose);
-        typeof data.use !== 'undefined' && request.set('use', data.use);
-        typeof data.notes !== 'undefined' && request.set('notes', data.notes);
-
-        typeof data.timePeriodRequestedTo !== 'undefined' && request.set('timePeriodRequested.to', data.timePeriodRequestedTo);
-        if (typeof data.timePeriodRequestedFrom !== 'undefined') {
-          request.set('timePeriodRequested.from', data.timePeriodRequestedFrom);
-          if (data.timePeriodRequestedFrom === '' || data.timePeriodRequestedFrom === null) {
-            request.set('timePeriodRequested.to', null);
-          }
-        }
-
-        request.save((err, newRequest) => {
-          if (err) {
-            console.error(err);
-            return reply(Boom.badImplementation(err));
+          typeof data.timePeriodRequestedTo !== 'undefined' && request.set('timePeriodRequested.to', data.timePeriodRequestedTo);
+          if (typeof data.timePeriodRequestedFrom !== 'undefined') {
+            request.set('timePeriodRequested.from', data.timePeriodRequestedFrom);
+            if (data.timePeriodRequestedFrom === '' || data.timePeriodRequestedFrom === null) {
+              request.set('timePeriodRequested.to', null);
+            }
           }
 
-          return reply(newRequest);
-        });
-      });
+          return request.save();
+        })
+        .then(newRequest => reply(newRequest))
+        .catch(err => reply(Boom.wrap(err)));
     }
   }
 ];
