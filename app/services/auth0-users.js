@@ -7,7 +7,7 @@ export function getAllUsers () {
   var data = null;
   return new Promise((resolve, reject) => {
     function fetcher (page) {
-      request.get(`${config.auth0.api}/users?per_page=${perPage}&page=${page}&include_totals=true&fields=user_metadata%2Cuser_id`, {
+      request.get(`${config.auth0.api}/users?per_page=${perPage}&page=${page}&include_totals=true&fields=user_metadata%2Cuser_id%2Capp_metadata`, {
         'auth': { 'bearer': config.auth0.manageToken }
       }, function (error, response, body) {
         if (!error && response.statusCode === 200) {

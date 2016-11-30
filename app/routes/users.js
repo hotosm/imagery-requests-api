@@ -22,7 +22,8 @@ module.exports = [
         data = data.map(o => {
           return {
             userId: o.user_id,
-            name: _.get(o, 'user_metadata.name', 'n/a')
+            name: _.get(o, 'user_metadata.name', 'n/a'),
+            roles: _.get(o, 'app_metadata.roles', [])
           };
         });
         reply(data);
