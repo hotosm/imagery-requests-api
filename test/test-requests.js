@@ -22,6 +22,7 @@ test.before(t => {
       return Promise.all([
         createRequest({
           _id: rid(1),
+          created: '2016-06-01T00:00:00.000Z',
           authorId: 'coordinator',
           name: 'test request 1',
           status: 'open',
@@ -38,18 +39,21 @@ test.before(t => {
         }),
         createRequest({
           _id: rid(2),
+          created: '2016-07-01T00:00:00.000Z',
           authorId: 'coordinator',
           name: 'test request 2',
           status: 'open'
         }),
         createRequest({
           _id: rid(3),
+          created: '2016-08-01T00:00:00.000Z',
           authorId: 'coordinator2',
           name: 'test request 3',
           status: 'closed'
         }),
         createRequest({
           _id: rid(4),
+          created: '2016-09-01T00:00:00.000Z',
           authorId: 'coordinator',
           name: 'test request 4',
           status: 'open'
@@ -130,6 +134,28 @@ test('GET /requests - list all requests filter author (public)', t => {
     var results = res.result;
     t.true(results.results.length === 1);
     t.is(results.results[0].name, 'test request 3');
+  });
+});
+
+test('GET /requests - list all requests filter dateFrom (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?dateFrom=2016-08-01'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results.length === 2);
+  });
+});
+
+test('GET /requests - list all requests filter dateFrom (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?dateFrom=2016-06-01&dateTo=2016-07-01'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results.length === 2);
   });
 });
 
