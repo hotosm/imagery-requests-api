@@ -47,7 +47,9 @@ module.exports = [
           status: Joi.alternatives(
             Joi.array().items(Joi.string().valid(taskStatus)),
             Joi.string().valid(taskStatus)
-          )
+          ),
+          dateFrom: Joi.date(),
+          dateTo: Joi.date().min(Joi.ref('dateFrom'))
         }
       }
     },
@@ -69,6 +71,16 @@ module.exports = [
       if (req.query.status) {
         let status = !_.isArray(req.query.status) ? [req.query.status] : req.query.status;
         filters.status = { $in: status };
+      }
+
+      if (req.query.dateFrom || req.query.dateTo) {
+        filters.created = {};
+        if (req.query.dateFrom) {
+          filters.created['$gte'] = req.query.dateFrom;
+        }
+        if (req.query.dateTo) {
+          filters.created['$lte'] = req.query.dateTo;
+        }
       }
 
       Promise.all([
