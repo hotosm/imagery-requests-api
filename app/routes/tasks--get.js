@@ -27,6 +27,7 @@ module.exports = [
             .then(request => {
               task = task.toObject();
               task.requestInfo = {name: request.name};
+              task.updates.reverse();
               return task;
             });
         })
