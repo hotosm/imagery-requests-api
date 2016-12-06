@@ -1,7 +1,7 @@
 import Boom from 'boom';
 import Joi from 'joi';
 
-import Request from '../models/request-model';
+import { attachRequestInfoToTask } from '../utils/utils';
 import Task from '../models/task-model';
 
 module.exports = [
@@ -23,15 +23,12 @@ module.exports = [
         .then(task => {
           if (!task) throw Boom.notFound();
 
-          return Request.findById(task.requestId, {name: true})
-            .then(request => {
-              task = task.toObject();
-              task.requestInfo = {name: request.name};
-              task.updates.reverse();
-              return task;
-            });
+          return attachRequestInfoToTask(task);
         })
-        .then(task => reply(task))
+        .then(task => {
+          task.updates.reverse();
+          return reply(task);
+        })
         .catch(err => reply(Boom.wrap(err)));
     }
   }

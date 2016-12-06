@@ -290,7 +290,7 @@ test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (surveyor
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     t.is(res.result.status, 'open');
-    var update = res.result.updates[res.result.updates.length - 1];
+    var update = res.result.updates[0];
     t.is(update.authorId, 'assigned-surveyor');
     t.is(update.status, 'unchanged');
     t.is(update.comment, 'Flight not possible, bad weather conditions');
@@ -312,7 +312,7 @@ test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (coordina
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     t.is(res.result.status, 'open');
-    var update = res.result.updates[res.result.updates.length - 1];
+    var update = res.result.updates[0];
     t.is(update.authorId, 'coordinator');
     t.is(update.status, 'unchanged');
     t.is(update.comment, 'Flight not possible, bad weather conditions');
@@ -334,10 +334,30 @@ test('POST /requests/{requuid}/tasks/{tuuid}/updates - status update complete (c
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     t.is(res.result.status, 'completed');
-    var update = res.result.updates[res.result.updates.length - 1];
+    var update = res.result.updates[0];
     t.is(update.authorId, 'coordinator');
     t.is(update.status, 'completed');
     t.is(update.comment, 'Imagery acquired');
+  });
+});
+
+test('POST /requests/{requuid}/tasks/{tuuid}/updates - add task update (coordinator role)', t => {
+  return instance.injectThen({
+    method: 'POST',
+    url: `/requests/${rid(1)}/tasks/${tid(0)}/updates`,
+    credentials: {
+      user_id: 'coordinator',
+      roles: ['coordinator']
+    },
+    payload: {
+      status: 'unchanged',
+      comment: 'Flight not possible, bad weather conditions'
+    }
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.status, 'open');
+    // A task returned after a status update should have the request inf;
+    t.true(res.result.requestInfo !== undefined);
   });
 });
 
