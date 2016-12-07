@@ -1,6 +1,7 @@
 import Boom from 'boom';
 import Joi from 'joi';
 
+import { attachRequestInfoToTask } from '../utils/utils';
 import Task from '../models/task-model';
 
 module.exports = [
@@ -52,7 +53,11 @@ module.exports = [
 
           return task.save();
         })
-        .then(newTask => reply(newTask))
+        .then(newTask => attachRequestInfoToTask(newTask))
+        .then(newTask => {
+          newTask.updates.reverse();
+          return reply(newTask);
+        })
         .catch(err => reply(Boom.wrap(err)));
     }
   }
