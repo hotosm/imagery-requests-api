@@ -118,7 +118,6 @@ module.exports = [
           return Task.find({requestId: request._id}, {status: true, geometry: true})
             .then(tasks => {
               request = request.toObject();
-console.log('tasks', tasks);
               if (req.query.footprint) {
                 let tasksWithGeo = tasks.filter(task => task.geometry !== null);
                 if (tasksWithGeo.length) {
