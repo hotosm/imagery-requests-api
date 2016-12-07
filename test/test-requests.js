@@ -58,8 +58,8 @@ test.before(t => {
           name: 'test request 4',
           status: 'open'
         }),
-        createTask({_id: tid(401), requestId: rid(4), name: 'task 1', authorId: 'coordinator', status: 'open'}),
-        createTask({_id: tid(402), requestId: rid(4), name: 'task 2', authorId: 'coordinator', status: 'completed'})
+        createTask({_id: tid(401), requestId: rid(4), name: 'task 1', authorId: 'coordinator', status: 'open', geometry: [[0, 0], [10, 0], [10, 10], [0, 10], [0, 0]]}),
+        createTask({_id: tid(402), requestId: rid(4), name: 'task 2', authorId: 'coordinator', status: 'completed', geometry: [[10, 10], [20, 10], [20, 20], [10, 20], [10, 10]]})
       ]);
     });
 });
@@ -111,6 +111,38 @@ test('GET /requests - list all requests filter status (public)', t => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.true(results.results.length === 3);
+  });
+});
+
+//
+// GET all requests footptints
+//
+test('GET /requests - list all requests no footprint by default (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+    t.true(results.results[0].footprint === undefined);
+  });
+});
+
+test('GET /requests - list all requests include footprint (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: '/requests?footprint=true'
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    var results = res.result;
+
+    // Req 1 has no tasks, therefore footprint is null
+    var req1 = results.results.find(o => o._id.toString() === rid(1));
+    t.is(req1.footprint, null);
+
+    var req4 = results.results.find(o => o._id.toString() === rid(4));
+    t.is(req4.footprint.type, 'Feature');
+    t.deepEqual(req4.footprint.geometry.coordinates, [[[0, 0], [20, 0], [20, 20], [0, 20], [0, 0]]]);
   });
 });
 
@@ -179,6 +211,29 @@ test('GET /requests/{ruuid} - specific request (public)', t => {
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     t.is(res.result.name, 'test request 1');
+    t.true(res.result.footprint === undefined);
+  });
+});
+
+test('GET /requests/{ruuid} - specific request with footprint (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: `/requests/${rid(4)}?footprint=true`
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.name, 'test request 4');
+    t.deepEqual(res.result.footprint.geometry.coordinates, [[[0, 0], [20, 0], [20, 20], [0, 20], [0, 0]]]);
+  });
+});
+
+test('GET /requests/{ruuid} - specific request with no footprint (public)', t => {
+  return instance.injectThen({
+    method: 'GET',
+    url: `/requests/${rid(1)}?footprint=true`
+  }).then(res => {
+    t.is(res.statusCode, 200, 'Status code is 200');
+    t.is(res.result.name, 'test request 1');
+    t.is(res.result.footprint, null);
   });
 });
 
