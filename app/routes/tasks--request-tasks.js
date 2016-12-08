@@ -1,6 +1,5 @@
 import Boom from 'boom';
 import Joi from 'joi';
-import async from 'async';
 
 import Task from '../models/task-model';
 
