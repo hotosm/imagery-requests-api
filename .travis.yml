@@ -25,6 +25,5 @@ deploy:
   provider: heroku
   api_key:
     secure: GH95DeQx0dvEKPitUWTkDJesPZnqS6LoM905DUPvvX/94i7ZFJxrXuo+9OXbCl2RmWg9e/HC8X+L5EhJrtfBl4xAUWZUtYJN++46CL6zyzAbrrgk5obpP4vtMOIe5mD9HaaOkB+w7H8590EwPCVVdmOY5eoK1Q5SsGn6lHhLoKkvep0GQREn52ok7HH/ub5iePjeCcrj99cDZ0Tv7IW7/C2mlCOemHT3nwzpc2tJhEaoHRVQiYDtjV3wDMP/DUIXXMX4YFr/z8v/45TrBJ+8RI2A6/8qAxefnHuZKLQECwBiPifzThzYfmjs6yZSmVhgr5/qIiGOkNpzaVy6Of6KhraCAWvAwWyhE7xihm8Np9PuZN58A5kX7psZYsUey1pxkJFcQ6RSMJM+uoXjtvPxUpM3rrQTvQNOULziussJrmycUqoxtjRSe89nRfYYRYqvdy4OAaIHOaMjLTwU1jiMog/b5DUdWf6p1Z1pfKboLSDd/g5ytT7H1FJza6LUjtq+5xSh44W/OnwXPtwxb5/wyJngsNYiTlcVPquhhxhbT3wUw0UcGpJaDizRtOHBvtxqqPfduf8PL96sUcIWfdBuO2K/IpxrNS2cqH/D1SrFOHLMmTR+GR+QKkDIaurfdU+8C2axQ8HnlrEY4B37gfpfDmSHtYFa6uYdWKcyLhCgqmo=
-  app: imagery-requests-staging
-  on:
-    branch: master
+  app: 
+    develop: imagery-requests-staging
