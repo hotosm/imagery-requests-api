@@ -4,6 +4,8 @@ import _ from 'lodash';
 
 import Request from '../models/request-model';
 import Task from '../models/task-model';
+import { polygon, featureCollection } from '@turf/helpers';
+import envelope from '@turf/envelope';
 
 const requestStatus = ['open', 'closed', 'canceled'];
 
@@ -24,7 +26,8 @@ module.exports = [
             Joi.string().valid(requestStatus)
           ),
           dateFrom: Joi.date(),
-          dateTo: Joi.date().min(Joi.ref('dateFrom'))
+          dateTo: Joi.date().min(Joi.ref('dateFrom')),
+          footprint: Joi.boolean().truthy('true').falsy('false')
         }
       }
     },
@@ -56,15 +59,27 @@ module.exports = [
         Request.find(filters).skip(skip).limit(req.limit).exec()
       ]).then(results => {
         var [count, rawRequests] = results;
-        return Promise.all(rawRequests.map(o => Task.find({requestId: o._id}, {status: true}).exec()))
+        return Promise.all(rawRequests.map(o => Task.find({requestId: o._id}, {status: true, geometry: true}).exec()))
           .then(allReqTasks => {
             // Add the task count to the requests.
             let requests = rawRequests.map((r, i) => {
+              let reqTasks = allReqTasks[i];
               // Convert from mongoose model to object.
               r = r.toObject();
+
+              if (req.query.footprint) {
+                let tasksWithGeo = reqTasks.filter(task => task.geometry !== null);
+                if (tasksWithGeo.length) {
+                  let fc = featureCollection(tasksWithGeo.map(task => polygon([task.geometry])));
+                  r.footprint = envelope(fc);
+                } else {
+                  r.footprint = null;
+                }
+              }
+
               r.tasksInfo = {
-                total: allReqTasks[i].length,
-                status: _.countBy(allReqTasks[i], 'status')
+                total: reqTasks.length,
+                status: _.countBy(reqTasks, 'status')
               };
 
               return r;
@@ -89,6 +104,9 @@ module.exports = [
       validate: {
         params: {
           uuid: Joi.string().hex()
+        },
+        query: {
+          footprint: Joi.boolean().truthy('true').falsy('false')
         }
       }
     },
@@ -97,9 +115,18 @@ module.exports = [
         .then(request => {
           if (!request) throw Boom.notFound();
 
-          return Task.find({requestId: request._id}, {status: true})
+          return Task.find({requestId: request._id}, {status: true, geometry: true})
             .then(tasks => {
               request = request.toObject();
+              if (req.query.footprint) {
+                let tasksWithGeo = tasks.filter(task => task.geometry !== null);
+                if (tasksWithGeo.length) {
+                  let fc = featureCollection(tasksWithGeo.map(task => polygon([task.geometry])));
+                  request.footprint = envelope(fc);
+                } else {
+                  request.footprint = null;
+                }
+              }
               request.tasksInfo = {
                 total: tasks.length,
                 status: _.countBy(tasks, 'status')

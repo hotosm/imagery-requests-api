@@ -20,7 +20,7 @@ Add the `mongo` uri to `config/local.js`:
     testUri: '' // used when running npm test
   }
 ```
-Or use the corresponding environment variables `MONGO_URI` and `MONGO_TESTURI`.
+Or use the corresponding environment variables `MONGODB_URI` and `MONGODB_TESTURI`.
 
 ### Running the App
 ```
