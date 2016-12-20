@@ -55,13 +55,12 @@ module.exports = function (hapiServer, cb) {
 
       // Pagination
       {
-        register: require('hapi-paginate'),
+        register: require('../plugins/hapi-paginate'),
         options: {
           limit: 100,
           routes: [
             '/requests',
-            '/requests/{requuid}/tasks',
-            '/users/{uuid}/tasks'
+            '/requests/{requuid}/tasks'
           ]
         }
       }
