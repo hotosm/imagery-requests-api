@@ -116,7 +116,7 @@ module.exports = [
         if (req.query.includeStats) {
           response.stats = {
             activeTasks: results[2],
-            completeTasks: results[3]
+            completedTasks: results[3]
           };
         }
 
