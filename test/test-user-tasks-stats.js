@@ -88,7 +88,7 @@ test('GET /users/{uuid}/tasks - list coordinator tasks stats - scope assigned (c
     var results = res.result;
     t.is(results.results.length, 1);
     t.is(results.stats.activeTasks, 2);
-    t.is(results.stats.completeTasks, 2);
+    t.is(results.stats.completedTasks, 2);
   });
 });
 
@@ -105,7 +105,7 @@ test('GET /users/{uuid}/tasks - list coordinator tasks stats - scope created (co
     var results = res.result;
     t.is(results.results.length, 4);
     t.is(results.stats.activeTasks, 2);
-    t.is(results.stats.completeTasks, 2);
+    t.is(results.stats.completedTasks, 2);
   });
 });
 
@@ -122,7 +122,7 @@ test('GET /users/{uuid}/tasks - list surveyor tasks stats - scope assigned (surv
     var results = res.result;
     t.is(results.results.length, 2);
     t.is(results.stats.activeTasks, 1);
-    t.is(results.stats.completeTasks, 1);
+    t.is(results.stats.completedTasks, 1);
   });
 });
 
@@ -137,9 +137,8 @@ test('GET /users/{uuid}/tasks - list surveyor tasks stats - scope created (surve
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
-    console.log('results', results);
     t.is(results.results.length, 0);
     t.is(results.stats.activeTasks, 1);
-    t.is(results.stats.completeTasks, 1);
+    t.is(results.stats.completedTasks, 1);
   });
 });
