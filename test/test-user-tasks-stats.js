@@ -22,24 +22,13 @@ test.before(t => {
       var reqId = rid(1);
 
       var allTasks = Promise.all([
-        createTask({_id: tid(1), requestId: reqId, name: 'task 1', status: 'open', authorId: 'coordinator-userid', deliveryTime: '2016-11-30T00:00:00.000Z'}),
-        createTask({_id: tid(2), requestId: reqId, name: 'task 2', status: 'open', authorId: 'coordinator-userid', assigneeId: 'assigned-surveyor'}),
-        createTask({_id: tid(3), requestId: reqId, name: 'task 3', status: 'completed', authorId: 'coordinator-userid', assigneeId: 'coordinator-userid'}),
-        createTask({
-          _id: tid(4),
-          requestId: reqId,
-          name: 'task 4',
-          status: 'completed',
-          authorId: 'coordinator-userid',
-          assigneeId: 'assigned-surveyor',
+        createTask({_id: tid(1), requestId: reqId, name: 'task 1', status: 'open', authorId: 'coordinator-userid'}),
+        createTask({_id: tid(2), requestId: reqId, name: 'task 2', status: 'open', authorId: 'coordinator-userid'}),
+        createTask({_id: tid(3), requestId: reqId, name: 'task 3', status: 'open', authorId: 'coordinator-userid', assigneeId: 'assigned-surveyor'}),
+        createTask({_id: tid(4), requestId: reqId, name: 'task 4', status: 'open', authorId: 'coordinator-userid', assigneeId: 'assigned-surveyor'}),
+        createTask({_id: tid(5), requestId: reqId, name: 'task 5', status: 'completed', authorId: 'coordinator-userid', assigneeId: 'coordinator-userid'}),
+        createTask({_id: tid(6), requestId: reqId, name: 'task 6', status: 'completed', authorId: 'coordinator-userid', assigneeId: 'assigned-surveyor'})
 
-          geometry: [[10, 20], [20, 10]],
-          deliveryTime: '2016-11-30T00:00:00.000Z',
-          timePeriodProvided: {
-            from: '2016-11-01T00:00:00.000Z',
-            to: '2016-11-21T00:00:00.000Z'
-          }
-        })
       ]);
 
       return createRequest({
@@ -87,7 +76,7 @@ test('GET /users/{uuid}/tasks - list coordinator tasks stats - scope assigned (c
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.is(results.results.length, 1);
-    t.is(results.stats.activeTasks, 2);
+    t.is(results.stats.activeTasks, 4);
     t.is(results.stats.completedTasks, 2);
   });
 });
@@ -103,8 +92,8 @@ test('GET /users/{uuid}/tasks - list coordinator tasks stats - scope created (co
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
-    t.is(results.results.length, 4);
-    t.is(results.stats.activeTasks, 2);
+    t.is(results.results.length, 6);
+    t.is(results.stats.activeTasks, 4);
     t.is(results.stats.completedTasks, 2);
   });
 });
@@ -120,8 +109,8 @@ test('GET /users/{uuid}/tasks - list surveyor tasks stats - scope assigned (surv
   }).then(res => {
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
-    t.is(results.results.length, 2);
-    t.is(results.stats.activeTasks, 1);
+    t.is(results.results.length, 3);
+    t.is(results.stats.activeTasks, 2);
     t.is(results.stats.completedTasks, 1);
   });
 });
@@ -138,7 +127,7 @@ test('GET /users/{uuid}/tasks - list surveyor tasks stats - scope created (surve
     t.is(res.statusCode, 200, 'Status code is 200');
     var results = res.result;
     t.is(results.results.length, 0);
-    t.is(results.stats.activeTasks, 1);
+    t.is(results.stats.activeTasks, 2);
     t.is(results.stats.completedTasks, 1);
   });
 });
