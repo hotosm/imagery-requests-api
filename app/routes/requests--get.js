@@ -89,6 +89,33 @@ module.exports = [
           });
       })
       .then(results => {
+        var [count, requests] = results;
+        let fields = {
+          created: 1,
+          updated: 1,
+          authorId: 1,
+          name: 1,
+          status: 1,
+          requestId: 1,
+          assigneeId: 1,
+          deliveryTime: 1
+        };
+
+        return Promise.all(requests.map(o => Task
+            .findOne({requestId: o._id, deliveryTime: {'$ne': null}}, fields)
+            .sort({deliveryTime: 1})
+            .exec())
+          )
+          .then(reqTasksNextDue => {
+            requests = requests.map((r, i) => {
+              r.tasksInfo.nextDue = reqTasksNextDue[i];
+              return r;
+            });
+
+            return [count, requests];
+          });
+      })
+      .then(results => {
         req.count = results[0];
         reply(results[1]);
       })
@@ -131,6 +158,27 @@ module.exports = [
                 total: tasks.length,
                 status: _.countBy(tasks, 'status')
               };
+              return request;
+            });
+        })
+        .then(request => {
+          let fields = {
+            created: 1,
+            updated: 1,
+            authorId: 1,
+            name: 1,
+            status: 1,
+            requestId: 1,
+            assigneeId: 1,
+            deliveryTime: 1
+          };
+
+          return Task
+            .findOne({requestId: request._id, deliveryTime: {'$ne': null}}, fields)
+            .sort({deliveryTime: 1})
+            .exec()
+            .then(reqTaskNextDue => {
+              request.tasksInfo.nextDue = reqTaskNextDue;
               return request;
             });
         })
