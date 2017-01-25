@@ -13,6 +13,9 @@
     "nodemon": "nodemon index.js",
     "postinstall": "[ -f app/config/local.js ] || echo 'module.exports = {};' > app/config/local.js"
   },
+  "engines": {
+    "node": "6.7.x"
+  },
   "author": "Development Seed",
   "license": "",
   "homepage": "https://github.com/hotosm/imagery-requests-api",

@@ -6,7 +6,8 @@ module.exports = function (hapiServer, cb) {
     if (err) return cb(err);
 
     hapiServer.auth.strategy('jwt', 'jwt', {
-      key: new Buffer(config.auth0.secret, 'base64'),
+      // key: new Buffer(config.auth0.secret, 'base64'),
+      key: config.auth0.secret,
       validateFunc: function (decoded, request, callback) {
         if (decoded) {
           callback(null, true);
