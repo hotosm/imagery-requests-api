@@ -1,28 +1,75 @@
-### Requirements
-These dependencies are needed to build the app.
+<h1 align="center">Imagery Requests Api</h1>
 
-- Node (v6.7.x) & Npm ([nvm](https://github.com/creationix/nvm) usage is advised)
-- MongoDB (v3)
+## Installation and Usage
 
-> The versions mentioned are the ones used during development. It could work with newer ones.
-  Run `nvm use` to activate the correct version.
+The steps below will walk you through setting up your own instance of the imagery-request-api.
 
-### Setup
-Install dependencies:
+### Install Project Dependencies
+To set up the development environment for this website, you'll need to install the following on your system:
+
+- [Node](http://nodejs.org/) v6.7 (To manage multiple node versions we recommend [nvm](https://github.com/creationix/nvm))
+- [MongoDB](https://www.mongodb.org/) v3
+
+### Install Application Dependencies
+
+If you use [`nvm`](https://github.com/creationix/nvm), activate the desired Node version:
+
 ```
-$ npm install
+nvm install
 ```
 
-Add the `mongo` uri to `config/local.js`:
+Install Node modules:
+
 ```
+npm install
+```
+
+### Usage
+
+#### Config files
+All the config files can be found in `app/assets/scripts/config`.
+After installing the projects there will be 3 main files:
+  - `local.js` - Used only for local development. On production this file should not exist or be empty.
+  - `staging.js`
+  - `production.js`
+
+The `production.js` file serves as base and the other 2 will override it as needed:
+  - `staging.js` will be loaded whenever the env variable `DS_ENV` is set to staging.
+  - `local.js` will be loaded if it exists.
+
+Some of the following options are overridable by environment variables, expressed between [].
+The following options must be set: (The used file will depend on the context)
+  - `connection.host` - The host. (mostly cosmetic. Default to 0.0.0.0). [PORT]
+  - `connection.port` - The port where the app runs. (Default 4000). [HOST]
+  - `mongo.uri` - The uri to connect to the mongo database. [MONGODB_URI]
+  - `mongo.testUri` - The uri to connect to the mongo database for testing. The database is wiped after every test. [MONGODB_TESTURI]
+  - `auth0` - See the section below for an in-depth explanation.
+  - `auth0.secret` - [AUTH0_SECRET]
+  - `auth0.clientId` - [AUTH0_CLIENT_ID]
+  - `auth0.api` - [AUTH0_API]
+  - `auth0.manageToken` - [AUTH0_MANAGE_TOKEN]
+
+Example:
+``` 
+module.exports = {
+  connection: {
+    host: '0.0.0.0',
+    port: 4000
+  },
   mongo: {
-    uri: '',
-    testUri: '' // used when running npm test
+    uri: 'mongodb://localhost/imagery-request',
+    testUri: 'mongodb://localhost/imagery-request-test'
+  },
+  auth0: {
+    secret: 'some string to keep secret',
+    clientId: 'qTQW5L362p0DWpuNAcx5SHggOY1p65bG',
+    api: 'https://danielfdsilva.eu.auth0.com/api/v2',
+    manageToken: 'some string to keep secret'
   }
+};
 ```
-Or use the corresponding environment variables `MONGODB_URI` and `MONGODB_TESTURI`.
 
-### Running the App
+#### Starting the app
 ```
 npm run nodemon
 ```
@@ -115,3 +162,7 @@ npm run setupdb
 ```
 
 Note: This will remove the database and import the dummy data again.
+
+# Deployment
+This app can be run on any server with Node.js 6.7 and a mongo database
+The deployment instructions are the same as listed above.
