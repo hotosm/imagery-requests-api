@@ -47,7 +47,6 @@ The following options must be set: (The used file will depend on the context)
   - `auth0.secret` - [AUTH0_SECRET]
   - `auth0.clientId` - [AUTH0_CLIENT_ID]
   - `auth0.api` - [AUTH0_API]
-  - `auth0.manageToken` - [AUTH0_MANAGE_TOKEN]
 
 Example:
 ``` 
@@ -63,8 +62,7 @@ module.exports = {
   auth0: {
     secret: 'some string to keep secret',
     clientId: 'qTQW5L362p0DWpuNAcx5SHggOY1p65bG',
-    api: 'https://danielfdsilva.eu.auth0.com/api/v2',
-    manageToken: 'some string to keep secret'
+    api: 'https://danielfdsilva.eu.auth0.com'
   }
 };
 ```
@@ -84,31 +82,27 @@ Starts the app without file watching
 # Auth0 setup
 
 1. Create a new [auth0](https://auth0.com/) account.
-2. Create a `Web app` application with `Node.js` technology.
+2. Create a `Non Interactive Client`.
 3. Open the settings tab.
-4. Fill in the Name, Client type (Single Page Application), and the Allowed Callback URLs.
+4. Fill in the Name, Client type (Non Interactive Client), and the Allowed Callback URLs.
+  - At this point setup your app's config file before continuing. (Check section below).
+5. Go to your `account settings` (top-right corner) and then click Advanced. Scroll down and enable `Enable APIs Section`.
+6. Go to `APIs` and select `Auth0 Management API`
+7. Go to `Non Interactive Client`, authorize your client, and select `read:users` scope.
+8. Click `Update` and it's all set.
 
 ### Config
 
-1. Copy the `Client ID` and `Client Secret` to the appropriate config file. The api will be the `Domain` + `/api/v2`
-2. Check the *Manage Token* for information on how to get one.
+Copy the `Client ID` and `Client Secret` to the appropriate config file. The api will be the `Domain`.
 
 ```
   auth0: {
     secret: '',
     clientId: '',
-    api: '',
-    manageToken: ''
+    api: ''
   }
 ```
-Or the corresponding environment variables `AUTH0_SECRET`, `AUTH0_CLIENT_ID`, `AUTH0_URL`, `AUTH0_MANAGE_TOKEN`
-
-### Manage token
-The auth0 manage token is used to query the auth0 api to get information about the users. The easiest way to get one is to use token generator on their [documentation page](https://auth0.com/docs/api/management/v2).
-
-1. Be sure to be logged in.
-2. On the left side select entity: `read` and action: `users`.
-3. Press the arrow and the token will appear above.
+Or the corresponding environment variables `AUTH0_SECRET`, `AUTH0_CLIENT_ID`, `AUTH0_URL`
 
 ### Users
 Users are authenticated through tokens and created through the [auth0 interface](https://manage.auth0.com/#/users).
