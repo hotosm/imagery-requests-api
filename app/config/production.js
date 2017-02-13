@@ -13,7 +13,6 @@ module.exports = {
   auth0: {
     secret: null,
     clientId: null,
-    api: null,
-    manageToken: null
+    api: null
   }
 };
