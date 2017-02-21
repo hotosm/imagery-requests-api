@@ -61,8 +61,8 @@ module.exports = [
         return reply(Boom.unauthorized('Not authorized to perform this action'));
       }
 
-      const page = req.query.page ? _.parseInt(req.query.page) : 1;
-      const limit = req.query.limit ? _.parseInt(req.query.limit) : 100;
+      const page = req.page;
+      const limit = req.limit;
       const skip = (page - 1) * limit;
 
       // Filters.
