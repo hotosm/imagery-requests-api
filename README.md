@@ -1,4 +1,4 @@
-<h1 align="center">Imagery Requests Api</h1>
+<h1 align="center">Imagery Coordination API</h1>
 
 ## Installation and Usage
 
