@@ -1,8 +1,8 @@
 {
-  "name": "imagery-requests-api",
+  "name": "imagery-coordination-api",
   "version": "0.1.0",
-  "description": "Api for the imagery-requests",
-  "repository": "https://github.com/hotosm/imagery-requests-api",
+  "description": "Api for the Imagery-Coordination",
+  "repository": "https://github.com/hotosm/imagery-coordination-api",
   "main": "",
   "scripts": {
     "setupdb": "bash .build_files/setup-db.sh",
@@ -18,7 +18,7 @@
   },
   "author": "Development Seed",
   "license": "",
-  "homepage": "https://github.com/hotosm/imagery-requests-api",
+  "homepage": "https://github.com/hotosm/imagery-coordination-api",
   "dependencies": {
     "@turf/envelope": "^3.7.0",
     "@turf/helpers": "^3.6.3",
@@ -32,7 +32,6 @@
     "good-squeeze": "^5.0.0",
     "hapi": "^15.2.0",
     "hapi-auth-jwt2": "^7.2.0",
-    "hapi-paginate": "github:developmentseed/hapi-paginate#cfa9067d634e2bcef9a631ee71646cc9dbf2f5f7",
     "hapi-router": "^3.5.0",
     "joi": "^10.0.0",
     "lodash": "^4.17.0",

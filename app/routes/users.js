@@ -43,6 +43,7 @@ module.exports = [
         query: {
           page: Joi.number(),
           limit: Joi.number(),
+          includeStats: Joi.boolean().truthy('true').falsy('false').default(false),
           scope: Joi.string().valid('created', 'assigned').default('assigned'),
           status: Joi.alternatives(
             Joi.array().items(Joi.string().valid(taskStatus)),
@@ -59,7 +60,10 @@ module.exports = [
       if (roles.indexOf('coordinator') === -1 && roles.indexOf('surveyor') === -1) {
         return reply(Boom.unauthorized('Not authorized to perform this action'));
       }
-      const skip = (req.page - 1) * req.limit;
+
+      const page = req.page;
+      const limit = req.limit;
+      const skip = (page - 1) * limit;
 
       // Filters.
       let filters = {};
@@ -89,33 +93,78 @@ module.exports = [
       ])
       .then(results => {
         var [count, rawTasks] = results;
-        // Array of request ids to get.
-        let uniqueReqIds = _.uniq(_.map(rawTasks, 'requestId'));
-
-        // Get all the requests these tasks belong to and get their name.
-        return Request.find({_id: {$in: uniqueReqIds}}, {name: true})
-          .then(requests => {
-            let tasks = rawTasks.map(t => {
-              let r = _.find(requests, o => o._id.equals(t.requestId));
-
-              if (!r) {
-                throw new Error(`Request (${t.requestId}) not found for task (${t._id})`);
-              }
-
-              // Mongoose object to plain object to allow adding properties.
-              t = t.toObject();
-              t.requestInfo = {name: r.name};
-              return t;
-            });
-
-            return [count, tasks];
-          });
+        return addRequestInfoToTask(rawTasks)
+          .then(tasks => [count, tasks]);
       })
       .then(results => {
-        req.count = results[0];
-        reply(results[1]);
+        if (req.query.includeStats) {
+          return getUserTaskStats(req.params.uuid).then(stats => [...results, ...stats]);
+        } else {
+          return results;
+        }
+      })
+      .then(results => {
+        let response = {
+          meta: {
+            page,
+            limit,
+            found: results[0]
+          },
+          results: results[1]
+        };
+
+        if (req.query.includeStats) {
+          response.stats = {
+            completedTasks: results[2],
+            activeTasks: results[3]
+          };
+        }
+
+        reply(response);
       })
       .catch(err => reply(Boom.badImplementation(err)));
     }
   }
 ];
+
+function addRequestInfoToTask (rawTasks) {
+  // Array of request ids to get.
+  let uniqueReqIds = _.uniq(_.map(rawTasks, 'requestId'));
+
+  return Request.find({_id: {$in: uniqueReqIds}}, {name: true})
+    .then(requests => {
+      let tasks = rawTasks.map(t => {
+        let r = _.find(requests, o => o._id.equals(t.requestId));
+
+        if (!r) {
+          throw new Error(`Request (${t.requestId}) not found for task (${t._id})`);
+        }
+
+        // Mongoose object to plain object to allow adding properties.
+        t = t.toObject();
+        t.requestInfo = {name: r.name};
+        return t;
+      });
+
+      return tasks;
+    });
+}
+
+function getUserTaskStats (uid) {
+  return Promise.all([
+    Task.count({$and: [
+      {status: 'completed'},
+      {$or: [
+        {assigneeId: uid},
+        {authorId: uid}
+      ]}
+    ]}),
+    Task.count({$and: [
+      {status: {$ne: 'completed'}},
+      {$or: [
+        {assigneeId: uid},
+        {authorId: uid}
+      ]}
+    ]})
+  ]);
+}
