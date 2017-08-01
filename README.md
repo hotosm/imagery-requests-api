@@ -86,10 +86,13 @@ Starts the app without file watching
 3. Open the settings tab.
 4. Fill in the Name, Client type (Non Interactive Client), and the Allowed Callback URLs.
   - At this point setup your app's config file before continuing. (Check section below).
-5. Go to your `account settings` (top-right corner) and then click Advanced. Scroll down and enable `Enable APIs Section`.
-6. Go to `APIs` and select `Auth0 Management API`
-7. Go to `Non Interactive Client`, authorize your client, and select `read:users` scope.
-8. Click `Update` and it's all set.
+5. At `Token Endpoint Authentication Method` select `Post`.
+6. Scroll to the bottom of the page and select `Show Advanced Settings`.
+7. Under `Advanced Settings/Grant Types` check `Client Credentials` and click `Save Changes`.
+8. Go to your `account settings` (top-right corner) and then click Advanced. Scroll down and enable `Enable APIs Section`.
+9. Go to `APIs` and select `Auth0 Management API`
+10. Go to `Non Interactive Client`, authorize your client, and select `read:users` scope.
+11. Click `Update` and it's all set.
 
 ### Config
 
